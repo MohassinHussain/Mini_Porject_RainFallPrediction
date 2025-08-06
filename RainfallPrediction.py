@@ -50,6 +50,7 @@ agri_accuracy = accuracy_score(y_test_agri, agriculture_model.predict(X_test_ar)
 rainfall_mae = mean_absolute_error(y_test_rainfall, rainfall_model.predict(X_test_r))
 
 # Streamlit App
+st.title("AgroFlo Predictor")
 st.title("Rainfall Prediction Model")
 st.title("Training Phase")
 st.subheader("Model Performance on the dataset")
