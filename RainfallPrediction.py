@@ -9,29 +9,23 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, mean_absolute_error, classification_report
 
-# Load dataset
 df = pd.read_csv("TrainingDatasetRainFallPrediction.csv")
 
-# Convert categorical columns (Location) to numerical
 df["Location"] = df["Location"].astype("category").cat.codes
 
-# Feature selection
 features = ["Temperature (C)", "Humidity (%)", "Wind Speed (km/h)", "Pressure (hPa)", "Cloud Cover (%)"]
 X = df[features]
 
-# Target variables
-y_rain = (df["Rainfall (mm)"] > 0).astype(int)  # Binary classification
-y_rainfall_intensity = df["Rainfall Intensity (mm/hr)"]  # Regression
-y_flood = (df["Flood Occurrence Rate"] > 0.1).astype(int)  # Binary classification
-y_agriculture = (df["Agriculture Suitability Rate"] > 0.7).astype(int)  # Binary classification
+y_rain = (df["Rainfall (mm)"] > 0).astype(int)  
+y_rainfall_intensity = df["Rainfall Intensity (mm/hr)"] 
+y_flood = (df["Flood Occurrence Rate"] > 0.1).astype(int)  
+y_agriculture = (df["Agriculture Suitability Rate"] > 0.7).astype(int)  
 
-# Split data for training
 X_train, X_test, y_train_rain, y_test_rain = train_test_split(X, y_rain, test_size=0.2, random_state=42)
 X_train_rf, X_test_rf, y_train_flood, y_test_flood = train_test_split(X, y_flood, test_size=0.2, random_state=42)
 X_train_ar, X_test_ar, y_train_agri, y_test_agri = train_test_split(X, y_agriculture, test_size=0.2, random_state=42)
 X_train_r, X_test_r, y_train_rainfall, y_test_rainfall = train_test_split(X, y_rainfall_intensity, test_size=0.2, random_state=42)
 
-# Train models
 rain_model = LogisticRegression()
 rain_model.fit(X_train, y_train_rain)
 
@@ -62,7 +56,6 @@ st.metric(label="🌾 Agriculture Suitability Accuracy", value=f"{agri_accuracy:
 st.subheader("Rainfall Intensity Error")
 st.metric(label="📏 Rainfall Intensity MAE", value=f"{rainfall_mae:.2f}")
 
-# Optional: Use columns for better UI
 col1, col2 = st.columns(2)
 col1.metric("Rain Prediction Accuracy", f"{rain_accuracy:.2%}")
 col2.metric("Flood Prediction Accuracy", f"{flood_accuracy:.2%}")
@@ -70,9 +63,7 @@ col2.metric("Flood Prediction Accuracy", f"{flood_accuracy:.2%}")
 col1.metric("Agriculture Suitability Accuracy", f"{agri_accuracy:.2%}")
 col2.metric("Rainfall Intensity MAE", f"{rainfall_mae:.2f}")
 
-# Streamlit App
 
-# Data Visualizations
 st.title("Visualizations of Model analysis on trainig data")
 
 accuracies = [accuracy_score(y_test_rain, rain_model.predict(X_test)),
@@ -87,7 +78,6 @@ ax.set_ylim(0, 1)
 ax.set_ylabel("Accuracy")
 st.pyplot(fig)
 
-# Regression graph: Actual vs Predicted Rainfall Intensity
 st.subheader("Rainfall Intensity: Actual vs Predicted")
 
 fig, ax = plt.subplots(figsize=(8, 5))
@@ -97,7 +87,6 @@ ax.set_xlabel("Actual Rainfall Intensity (mm/hr)")
 ax.set_ylabel("Predicted Rainfall Intensity (mm/hr)")
 st.pyplot(fig)
 
-# Classification Reports
 
 st.subheader("Classification Reports")
 
@@ -109,26 +98,22 @@ st.subheader("Classification Reports")
 def classification_report_to_df(report):
     report_dict = classification_report(report['y_true'], report['y_pred'], output_dict=True)
     df = pd.DataFrame(report_dict).transpose()
-    df = df.round(2)  # Round values for better readability
+    df = df.round(2)  
     return df
 
-# Generate reports for each model
 rain_report = classification_report_to_df({'y_true': y_test_rain, 'y_pred': rain_model.predict(X_test)})
 flood_report = classification_report_to_df({'y_true': y_test_flood, 'y_pred': flood_model.predict(X_test_rf)})
 agri_report = classification_report_to_df({'y_true': y_test_agri, 'y_pred': agriculture_model.predict(X_test_ar)})
 
-# Streamlit UI
 st.title("Weather & Agriculture Prediction Model")
 
 st.subheader("Classification Reports")
 
-# Create tabs for each classification report
 tab1, tab2, tab3 = st.tabs(["🌧️ Rain Prediction", "🌊 Flood Prediction", "🌾 Agriculture Suitability"])
 
 with tab1:
     st.write("### Rain Prediction Report")
-    st.dataframe(rain_report.style.format("{:.2f}"))  # Neatly formatted DataFrame
-
+    st.dataframe(rain_report.style.format("{:.2f}"))
 with tab2:
     st.write("### Flood Prediction Report")
     st.dataframe(flood_report.style.format("{:.2f}"))
@@ -137,8 +122,7 @@ with tab3:
     st.write("### Agriculture Suitability Report")
     st.dataframe(agri_report.style.format("{:.2f}"))
 
-# Prediction based on input
-# Sidebar for user input
+
 st.sidebar.header("Enter Weather Details")
 temp = st.sidebar.number_input("Temperature (C)", min_value=-10.0, max_value=50.0, value=25.0)
 humidity = st.sidebar.number_input("Humidity (%)", min_value=0.0, max_value=100.0, value=50.0)
@@ -149,17 +133,14 @@ cloud_cover = st.sidebar.number_input("Cloud Cover (%)", min_value=0.0, max_valu
 
 
 
-# Predict button
 if st.sidebar.button("Predict"):
     input_data = np.array([[temp, humidity, wind_speed, pressure, cloud_cover]])
 
-    # Make predictions
     rain_pred = rain_model.predict(input_data)[0]
     rainfall_intensity_pred = rainfall_model.predict(input_data)[0]
     flood_pred = flood_model.predict(input_data)[0]
     agriculture_pred = agriculture_model.predict(input_data)[0]
 
-    # Get probability function
     def get_probability(model, input_data):
         prob = model.predict_proba(input_data)[0]
         return prob[1] if len(prob) > 1 else prob[0]
@@ -168,14 +149,12 @@ if st.sidebar.button("Predict"):
     flood_prob = get_probability(flood_model, input_data)
     agriculture_prob = get_probability(agriculture_model, input_data)
 
-    # Display Predictions
     st.title("Prediction Results")
     st.write(f"**Rain Expected:** {'Yes' if rain_pred == 1 else 'No'}")
     st.write(f"**Predicted Rainfall Intensity:** {rainfall_intensity_pred:.2f} mm/hr")
     st.write(f"**Flood Occurrence:** {'Likely' if flood_pred == 1 else 'Unlikely'}")
     st.write(f"**Agriculture Suitability:** {'Suitable' if agriculture_pred == 1 else 'Not Suitable'}")
 
-    # Prediction Probability Bar Chart
     st.subheader("Weather Prediction Probability")
     fig, ax = plt.subplots(figsize=(8, 5))
     sns.barplot(x=labels, y=[rain_prob, flood_prob, agriculture_prob], palette="coolwarm", ax=ax)
@@ -183,7 +162,6 @@ if st.sidebar.button("Predict"):
     ax.set_ylabel("Probability")
     st.pyplot(fig)
 
-    # Save to CSV
     new_data = pd.DataFrame([{
         "Temperature (C)": temp,
         "Humidity (%)": humidity,
